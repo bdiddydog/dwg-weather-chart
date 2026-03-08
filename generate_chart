@@ -1,0 +1,118 @@
+"""
+DWG Prognostic Discussion Chart Generator
+Fetches the CPC 6-10/8-14 day discussion and generates the DWG styled HTML chart.
+"""
+
+import os
+import sys
+import urllib.request
+import anthropic
+from datetime import datetime
+
+def fetch_cpc_discussion():
+    """Fetch CPC discussion directly from the NWS text product server."""
+
+    urls_to_try = [
+        # Direct CPC text product
+        "https://tgftp.nws.noaa.gov/data/raw/fx/fxus06.kwbc.pmd.mrd.txt",
+        # Alternate NWS FTP mirror
+        "https://tgftp.nws.noaa.gov/data/forecasts/pmd/fxus06.txt",
+        # NWS product viewer
+        "https://forecast.weather.gov/product.php?site=NWS&issuedby=KWBC&product=PMD&format=TXT&version=1&glossary=0",
+    ]
+
+    for url in urls_to_try:
+        try:
+            print(f"Trying: {url}")
+            req = urllib.request.Request(url, headers={
+                "User-Agent": "DWG-Weather-Chart/1.0 (Delaware Weather Group)"
+            })
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                raw = resp.read().decode("utf-8", errors="ignore")
+
+            # Clean up HTML if needed
+            if "<html" in raw.lower():
+                start = raw.find("<pre>")
+                end   = raw.find("</pre>")
+                if start != -1 and end != -1:
+                    raw = raw[start+5:end]
+
+            raw = raw.strip()
+            if len(raw) > 500 and ("6-10" in raw or "6 to 10" in raw.lower()):
+                print(f"  Got {len(raw)} chars ✅")
+                return raw
+            else:
+                print(f"  Content too short or not a PMD product, skipping.")
+
+        except Exception as e:
+            print(f"  Failed: {e}")
+
+    raise RuntimeError("Could not fetch CPC discussion from any source.")
+
+
+SYSTEM_PROMPT = """You are a weather data visualization expert for the Delaware Weather Group (DWG).
+Convert a raw NWS CPC 6-10/8-14 day prognostic discussion into a polished dark-themed HTML dashboard.
+
+DESIGN: Dark control-room aesthetic. CSS variables:
+--bg:#050c18  --panel:#070f1e  --border:#0e2844  --text:#cce4f8
+--b:#00c8ff  --g:#00ff9d  --a:#ffb700  --r:#ff3c5a  --p:#b060ff  --w:#fff5e0
+--warm:#ff7d3b  --cool:#5bc8ff  --wet:#38d47a  --dry:#c8941a  --dim:#2e4d6a
+
+FONTS (Google Fonts): Orbitron (headers), Share Tech Mono (data), Barlow (body)
+Scanline overlay body::before, grid background body::after, fadeUp animations on cards.
+
+SECTIONS REQUIRED:
+1. MASTHEAD - 🌩 logo bug (cyan gradient), DWG Virtual Weather Lab, issued time, forecaster, valid dates.
+2. FORECAST CONFIDENCE - Two cards. Dot-pip gauges out of 5. 6-10 blue, 8-14 amber. Score + reason.
+3. DIVIDER - "6-10 DAY OUTLOOK · [dates]" glowing cyan pill.
+4. 500-hPa PATTERN OVERVIEW 6-10 - 3-col card grid. ridge=warm border, trough=cool border, neutral=green. Anomaly values.
+5. KEY HIGHLIGHTS 6-10 - 4 big-number cards. hot/cold/wet/dry. Region, %, reason.
+6. TEMP & PRECIP BARS 6-10 - Side-by-side panels. Horizontal bars, width=probability%. Warm/cool/wet/dry colors.
+7. MODEL BLEND 6-10 - Bar chart. CNENS=green, ECENS=purple, GEFS=cyan, ECMWF=amber, GFS=orange. Exact % from text.
+8. DIVIDER - "8-14 DAY OUTLOOK · [dates]" glowing purple pill.
+9. PATTERN EVOLUTION 8-14 - 3-col cards. Changes from week 1. Directional emojis. Model disagreements.
+10. KEY HIGHLIGHTS 8-14 - Same as #5 for week 2.
+11. TEMP & PRECIP BARS 8-14 - Same as #6 for week 2.
+12. MODEL BLEND 8-14 - Same as #7 for week 2.
+13. STATE TABLE - State | 6-10T | 6-10P | 8-14T | 8-14P | Note
+    Pull exact A/N/B from the discussion tables. DELAWARE ⭐ highlighted cyan.
+    Include: Delaware, Maryland, New Jersey, Pennsylvania, New York, Virginia,
+    West Virginia, Ohio, Connecticut, Rhode Island.
+    Colored badge tags for each value.
+14. ANALOGS - Two cards. 5-day D-3 and 7-day D-4 dates. Format: "Mon DD, YYYY".
+15. FOOTER - DWG branding left, 1991-2020 normals + source right.
+
+OUTPUT: Full HTML only. No markdown. No explanation. Start with <!DOCTYPE html>."""
+
+
+def generate_chart(text):
+    print("Calling Claude API...")
+    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+    msg = client.messages.create(
+        model="claude-sonnet-4-20250514",
+        max_tokens=16000,
+        system=SYSTEM_PROMPT,
+        messages=[{"role": "user", "content": f"Generate the DWG chart HTML:\n\n{text}"}],
+    )
+    html = msg.content[0].text.strip()
+    if html.startswith("```"):
+        html = html.split("\n", 1)[1]
+        if "```" in html:
+            html = html.rsplit("```", 1)[0]
+    print(f"  Generated {len(html)} chars ✅")
+    return html
+
+
+def main():
+    try:
+        discussion = fetch_cpc_discussion()
+        html = generate_chart(discussion)
+        with open("dwg_prog_discussion_chart.html", "w", encoding="utf-8") as f:
+            f.write(html)
+        print(f"\n✅ Done — {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}")
+    except Exception as e:
+        print(f"\n❌ {e}", file=sys.stderr)
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
