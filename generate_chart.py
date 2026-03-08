@@ -21,8 +21,7 @@ def fetch_cpc_discussion():
 
     # Get list of latest PMD products from CPC (KWBC = College Park)
     resp = requests.get(
-        NWS_PRODUCTS_URL,
-        params={"type": "PMD", "location": "KWBC"},
+    f"{NWS_PRODUCTS_URL}/types/PMD/locations/KWBC",
         headers=NWS_HEADERS,
         timeout=30,
     )
