@@ -1,0 +1,46 @@
+name: DWG Chart
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 22 */2 * *'
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install anthropic
+      - name: Generate
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          python - << 'EOF'
+          import urllib.request, os, sys, anthropic
+          req = urllib.request.Request(
+              "https://tgftp.nws.noaa.gov/data/raw/fx/fxus06.kwbc.pmd.mrd.txt",
+              headers={"User-Agent": "DWG/1.0"}
+          )
+          with urllib. request.urlopen(req, timeout=20) as r:
+              text = r.read().decode("utf-8", errors="ignore").strip()
+          print(f"Got {len(text)} chars")
+          client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+          msg = client.messages.create(
+              model="claude-sonnet-4-20250514",
+              max_tokens=16000,
+              messages=[{"role": "user", "content":f"You are a weather viz expert for the Delaware Weather Group. Convert this CPC 6-10/8-14 day discussion into a beautiful dark-themed HTML dashboard. Dark control-room style, Orbitron font, cyan/amber/green accents. Include all sections: confidence gauges, pattern overview cards, highlights, temp/precip bars, model blend, state table with Delaware highlighted, analogs. Return complete HTML only:\n\n{text}"}]
+          )
+          html = msg.content[0].text.strip()
+          if html.startswith("```"):
+              html = html.split("\n",1)[1].rsplit("```",1)[0]
+          with open("dwg_prog_discussion_chart.html", "w") as f:
+              f.write(html)
+          print("Done!")
+          EOF
+      - run: |
+          git config user.name "DWG Bot"
+          git config user.email "bot@dwg.local"
+          git add dwg_prog_discussion_chart.html
+          git diff --staged --quiet || git commit -m "Chart update $(date +'%b %d %Y')"
+          git push
