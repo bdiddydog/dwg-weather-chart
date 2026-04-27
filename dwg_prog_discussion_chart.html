@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Delaware Weather Group - CPC Extended Outlook Dashboard</title>
+    <title>Delaware Weather Group - Extended Forecast Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         * {
@@ -11,576 +11,615 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
+            background: #0a0a0a;
+            color: #e0e0e0;
             font-family: 'Orbitron', monospace;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
-            color: #00ffff;
+            overflow-x: hidden;
+        }
+
+        .dashboard {
             min-height: 100vh;
-            overflow-x: auto;
-        }
-        
-        .dashboard-header {
-            background: linear-gradient(90deg, #000 0%, #1a1a1a 50%, #000 100%);
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
             padding: 20px;
-            border-bottom: 2px solid #00ffff;
-            box-shadow: 0 4px 20px rgba(0, 255, 255, 0.3);
-            text-align: center;
         }
-        
-        .dashboard-header h1 {
-            font-size: 2.5em;
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #00ffff;
+            padding-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #00ffff;
+            font-size: 2.5rem;
             font-weight: 900;
-            text-shadow: 0 0 10px #00ffff;
+            text-shadow: 0 0 20px #00ffff;
             margin-bottom: 10px;
         }
-        
-        .dashboard-header .subtitle {
-            color: #ffbf00;
-            font-size: 1.1em;
+
+        .header .subtitle {
+            color: #ffa500;
+            font-size: 1.2rem;
             font-weight: 400;
         }
-        
-        .main-container {
+
+        .grid {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             gap: 20px;
-            padding: 20px;
-            max-width: 1600px;
-            margin: 0 auto;
+            margin-bottom: 30px;
         }
-        
-        .panel {
-            background: rgba(26, 26, 26, 0.9);
+
+        .card {
+            background: rgba(20, 20, 20, 0.9);
             border: 1px solid #333;
-            border-radius: 8px;
+            border-radius: 10px;
             padding: 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
             transition: all 0.3s ease;
         }
-        
-        .panel:hover {
+
+        .card:hover {
             border-color: #00ffff;
-            box-shadow: 0 6px 25px rgba(0, 255, 255, 0.2);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
         }
-        
-        .panel-header {
-            color: #ffbf00;
-            font-size: 1.2em;
+
+        .card-header {
+            color: #00ffff;
+            font-size: 1.3rem;
             font-weight: 700;
             margin-bottom: 15px;
-            text-align: center;
-            border-bottom: 1px solid #444;
-            padding-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        
+
         .confidence-gauge {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin: 10px 0;
-        }
-        
-        .gauge {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
             position: relative;
-            background: conic-gradient(#00ff00 0deg 216deg, #333 216deg 360deg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 20px;
         }
-        
-        .gauge-6-10 {
-            background: conic-gradient(#ffbf00 0deg 216deg, #333 216deg 360deg);
+
+        .gauge-bg {
+            stroke: #333;
+            stroke-width: 8;
+            fill: none;
         }
-        
-        .gauge-8-14 {
-            background: conic-gradient(#ff4444 0deg 144deg, #333 144deg 360deg);
+
+        .gauge-fill {
+            stroke: #00ff00;
+            stroke-width: 8;
+            fill: none;
+            stroke-linecap: round;
+            transition: stroke-dasharray 0.5s ease;
         }
-        
-        .gauge-inner {
-            width: 40px;
-            height: 40px;
-            background: #1a1a1a;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+
+        .gauge-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #00ff00;
+            font-size: 1.2rem;
             font-weight: 700;
         }
-        
-        .pattern-card {
-            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-            border: 1px solid #444;
-            border-radius: 6px;
-            padding: 15px;
-            margin: 10px 0;
+
+        .pattern-overview {
+            background: linear-gradient(45deg, #1a1a2e, #16213e);
+            border: 2px solid #ffa500;
         }
-        
-        .pattern-title {
-            color: #00ffff;
-            font-weight: 700;
-            margin-bottom: 8px;
+
+        .highlights {
+            background: linear-gradient(45deg, #2e1a1a, #3e1616);
+            border: 2px solid #ff6b6b;
         }
-        
-        .pattern-desc {
-            color: #ccc;
-            font-size: 0.9em;
-            line-height: 1.4;
-        }
-        
-        .forecast-bar {
+
+        .temp-precip-bars {
             display: flex;
-            align-items: center;
-            margin: 8px 0;
+            justify-content: space-between;
+            margin: 20px 0;
         }
-        
-        .bar-label {
-            width: 100px;
-            font-size: 0.9em;
-            color: #ffbf00;
-        }
-        
+
         .bar-container {
             flex: 1;
-            height: 20px;
-            background: #333;
-            border-radius: 10px;
-            overflow: hidden;
             margin: 0 10px;
         }
-        
-        .bar-fill {
+
+        .bar-label {
+            color: #ffa500;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .progress-bar {
+            height: 30px;
+            background: #333;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
             height: 100%;
-            border-radius: 10px;
+            border-radius: 15px;
             transition: width 0.8s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-weight: 700;
+            font-size: 0.8rem;
         }
-        
-        .temp-above { background: linear-gradient(90deg, #ff4444, #ff6666); }
-        .temp-below { background: linear-gradient(90deg, #4444ff, #6666ff); }
-        .precip-above { background: linear-gradient(90deg, #44ff44, #66ff66); }
-        .precip-below { background: linear-gradient(90deg, #ffaa44, #ffcc66); }
-        
+
+        .temp-above { background: linear-gradient(90deg, #ff4444, #ff8888); }
+        .temp-below { background: linear-gradient(90deg, #4444ff, #8888ff); }
+        .precip-above { background: linear-gradient(90deg, #44ff44, #88ff88); }
+        .precip-below { background: linear-gradient(90deg, #ffaa44, #ffcc88); }
+
         .model-blend {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 10px;
+            background: linear-gradient(45deg, #1a2e1a, #163e16);
         }
-        
+
         .model-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px;
-            background: rgba(68, 68, 68, 0.3);
-            border-radius: 4px;
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(0, 255, 0, 0.1);
+            border-radius: 5px;
+            border-left: 4px solid #00ff00;
         }
-        
-        .model-name {
+
+        .state-table {
+            grid-column: 1 / -1;
+            background: rgba(10, 10, 10, 0.95);
+            border: 2px solid #00ffff;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #333;
+        }
+
+        th {
+            background: #1a1a1a;
             color: #00ffff;
             font-weight: 700;
         }
-        
-        .model-percent {
-            color: #ffbf00;
-            font-weight: 700;
-        }
-        
-        .state-table {
-            max-height: 400px;
-            overflow-y: auto;
-            border: 1px solid #444;
-            border-radius: 4px;
-        }
-        
-        .state-row {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr;
-            padding: 8px;
-            border-bottom: 1px solid #333;
-            align-items: center;
-        }
-        
-        .state-row:hover {
-            background: rgba(68, 68, 68, 0.3);
-        }
-        
-        .delaware-highlight {
+
+        .delaware-row {
             background: rgba(0, 255, 255, 0.2) !important;
-            border: 1px solid #00ffff;
+            border: 2px solid #00ffff;
         }
-        
-        .state-name {
-            font-weight: 700;
-        }
-        
-        .forecast-value {
-            text-align: center;
-            padding: 4px;
-            border-radius: 3px;
-            font-weight: 700;
-        }
-        
-        .value-a { background: #ff4444; color: white; }
-        .value-b { background: #4444ff; color: white; }
-        .value-n { background: #666; color: white; }
-        .value-a-precip { background: #44ff44; color: black; }
-        .value-b-precip { background: #ffaa44; color: black; }
-        
+
+        .temp-above-cell { color: #ff8888; }
+        .temp-below-cell { color: #8888ff; }
+        .temp-normal-cell { color: #cccccc; }
+        .precip-above-cell { color: #88ff88; }
+        .precip-below-cell { color: #ffcc88; }
+        .precip-normal-cell { color: #cccccc; }
+
         .analogs {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            gap: 8px;
+            background: linear-gradient(45deg, #2e2e1a, #3e3e16);
+            border: 2px solid #ffa500;
         }
-        
+
         .analog-date {
-            background: rgba(0, 255, 255, 0.2);
-            padding: 8px;
+            display: inline-block;
+            background: rgba(255, 165, 0, 0.2);
+            padding: 5px 10px;
+            margin: 5px;
+            border-radius: 15px;
+            border: 1px solid #ffa500;
+            color: #ffa500;
+            font-size: 0.9rem;
+        }
+
+        .section-divider {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00ffff, transparent);
+            margin: 40px 0;
+        }
+
+        .forecast-period {
+            background: rgba(0, 255, 255, 0.1);
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 30px 0;
+        }
+
+        .period-title {
+            color: #00ffff;
+            font-size: 1.8rem;
+            font-weight: 900;
             text-align: center;
-            border-radius: 4px;
-            font-weight: 700;
-            font-size: 0.9em;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #00ffff;
         }
-        
-        .highlights {
-            color: #00ff00;
-            line-height: 1.6;
-        }
-        
-        .highlights strong {
-            color: #ffbf00;
-        }
-        
-        .full-width {
-            grid-column: 1 / -1;
-        }
-        
-        .two-column {
-            grid-column: span 2;
-        }
-        
-        @media (max-width: 1200px) {
-            .main-container {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .main-container {
-                grid-template-columns: 1fr;
-            }
-        }
+
+        .confidence-low { stroke: #ff4444; color: #ff4444; }
+        .confidence-avg { stroke: #ffa500; color: #ffa500; }
+        .confidence-high { stroke: #00ff00; color: #00ff00; }
     </style>
 </head>
 <body>
-    <div class="dashboard-header">
-        <h1>DELAWARE WEATHER GROUP</h1>
-        <div class="subtitle">CPC EXTENDED OUTLOOK DASHBOARD • MAY 01-09, 2026 • ISSUED APR 25 15:00 EDT</div>
+    <div class="dashboard">
+        <header class="header">
+            <h1>Delaware Weather Group</h1>
+            <div class="subtitle">Extended Forecast Dashboard | 6-10 & 8-14 Day Outlooks</div>
+            <div style="margin-top: 10px; color: #888; font-size: 0.9rem;">
+                Valid: May 3-7 & May 5-11, 2026 | Issued: April 27, 2026 | Forecaster: Scott H
+            </div>
+        </header>
+
+        <div class="forecast-period">
+            <div class="period-title">6-10 DAY OUTLOOK (MAY 03-07, 2026)</div>
+            
+            <div class="grid">
+                <div class="card">
+                    <div class="card-header">Forecast Confidence</div>
+                    <div class="confidence-gauge">
+                        <svg width="120" height="120">
+                            <circle cx="60" cy="60" r="50" class="gauge-bg"/>
+                            <circle cx="60" cy="60" r="50" class="gauge-fill confidence-avg" 
+                                    stroke-dasharray="188 314" stroke-dashoffset="62.7" transform="rotate(-90 60 60)"/>
+                        </svg>
+                        <div class="gauge-text confidence-avg">3/5</div>
+                    </div>
+                    <div style="text-align: center; color: #ffa500;">Average Confidence</div>
+                    <div style="text-align: center; font-size: 0.8rem; margin-top: 10px;">
+                        Fair model agreement on slow-moving blocking pattern
+                    </div>
+                </div>
+
+                <div class="card pattern-overview">
+                    <div class="card-header">Pattern Overview</div>
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: #ffa500;">Key Features:</strong>
+                    </div>
+                    <ul style="list-style: none; font-size: 0.9rem; line-height: 1.6;">
+                        <li>• Strong blocking ridge: Greenland to Baffin Island</li>
+                        <li>• Long-duration NE CONUS troughing</li>
+                        <li>• Anomalous ridge offshore SE Alaska</li>
+                        <li>• Southern stream trough across SW CONUS</li>
+                    </ul>
+                </div>
+
+                <div class="card highlights">
+                    <div class="card-header">Key Highlights</div>
+                    <div style="font-size: 0.9rem; line-height: 1.6;">
+                        <p style="margin-bottom: 10px;"><strong style="color: #8888ff;">Cold Pattern:</strong> Unseasonably cold across eastern CONUS due to persistent troughing</p>
+                        <p style="margin-bottom: 10px;"><strong style="color: #ff8888;">Warm West:</strong> Above normal temps in Pacific Northwest (>70% confidence)</p>
+                        <p><strong style="color: #88ff88;">Enhanced Precip:</strong> Above normal precipitation likely across Florida, Northeast</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">Delaware Outlook</div>
+                    <div class="temp-precip-bars">
+                        <div class="bar-container">
+                            <div class="bar-label">Temperature</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill temp-below" style="width: 65%;">Below Normal</div>
+                            </div>
+                        </div>
+                        <div class="bar-container">
+                            <div class="bar-label">Precipitation</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill precip-above" style="width: 60%;">Above Normal</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="text-align: center; font-size: 0.8rem; color: #ccc; margin-top: 10px;">
+                        Enhanced precipitation chances due to surface low pressure development
+                    </div>
+                </div>
+
+                <div class="card model-blend">
+                    <div class="card-header">Model Blend (500-hPa)</div>
+                    <div class="model-item">
+                        <span>European Ensemble</span>
+                        <span style="color: #00ff00; font-weight: 700;">45%</span>
+                    </div>
+                    <div class="model-item">
+                        <span>Canadian Ensemble</span>
+                        <span style="color: #00ff00; font-weight: 700;">35%</span>
+                    </div>
+                    <div class="model-item">
+                        <span>GFS Ensemble</span>
+                        <span style="color: #00ff00; font-weight: 700;">20%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div class="forecast-period">
+            <div class="period-title">8-14 DAY OUTLOOK (MAY 05-11, 2026)</div>
+            
+            <div class="grid">
+                <div class="card">
+                    <div class="card-header">Forecast Confidence</div>
+                    <div class="confidence-gauge">
+                        <svg width="120" height="120">
+                            <circle cx="60" cy="60" r="50" class="gauge-bg"/>
+                            <circle cx="60" cy="60" r="50" class="gauge-fill confidence-low" 
+                                    stroke-dasharray="125 314" stroke-dashoffset="125" transform="rotate(-90 60 60)"/>
+                        </svg>
+                        <div class="gauge-text confidence-low">2/5</div>
+                    </div>
+                    <div style="text-align: center; color: #ff4444;">Below Average</div>
+                    <div style="text-align: center; font-size: 0.8rem; margin-top: 10px;">
+                        Greater uncertainty in week-2 precipitation pattern
+                    </div>
+                </div>
+
+                <div class="card pattern-overview">
+                    <div class="card-header">Extended Pattern</div>
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: #ffa500;">Evolution:</strong>
+                    </div>
+                    <ul style="list-style: none; font-size: 0.9rem; line-height: 1.6;">
+                        <li>• Baffin Island ridge persists</li>
+                        <li>• NE CONUS troughing continues</li>
+                        <li>• Alaska ridge builds northward</li>
+                        <li>• Southern stream trough progresses SW CONUS</li>
+                    </ul>
+                </div>
+
+                <div class="card highlights">
+                    <div class="card-header">Week 2 Highlights</div>
+                    <div style="font-size: 0.9rem; line-height: 1.6;">
+                        <p style="margin-bottom: 10px;"><strong style="color: #8888ff;">Persistent Cold:</strong> Long duration cold pattern eastern/central CONUS</p>
+                        <p style="margin-bottom: 10px;"><strong style="color: #ff8888;">Western Warmth:</strong> Above normal temps continue across West</p>
+                        <p><strong style="color: #ffa500;">High Uncertainty:</strong> Precipitation pattern more uncertain than normal</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">Delaware Week 2</div>
+                    <div class="temp-precip-bars">
+                        <div class="bar-container">
+                            <div class="bar-label">Temperature</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill temp-below" style="width: 60%;">Below Normal</div>
+                            </div>
+                        </div>
+                        <div class="bar-container">
+                            <div class="bar-label">Precipitation</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill precip-above" style="width: 55%;">Above Normal</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div class="card state-table">
+            <div class="card-header" style="text-align: center; font-size: 1.5rem;">State Outlook Tables</div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                <div>
+                    <h3 style="color: #00ffff; text-align: center; margin: 20px 0;">6-10 Day Outlook</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>State</th>
+                                    <th>Temp</th>
+                                    <th>Precip</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Washington</td><td class="temp-above-cell">A</td><td class="precip-below-cell">B</td></tr>
+                                <tr><td>Oregon</td><td class="temp-above-cell">A</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Northern Calif</td><td class="temp-above-cell">A</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>Southern Calif</td><td class="temp-normal-cell">N</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>Idaho</td><td class="temp-above-cell">A</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Nevada</td><td class="temp-above-cell">A</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>Montana (W)</td><td class="temp-above-cell">A</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Montana (E)</td><td class="temp-normal-cell">N</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Wyoming</td><td class="temp-normal-cell">N</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>Utah</td><td class="temp-above-cell">A</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>Arizona</td><td class="temp-normal-cell">N</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Colorado</td><td class="temp-normal-cell">N</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>New Mexico</td><td class="temp-normal-cell">N</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>North Dakota</td><td class="temp-below-cell">B</td><td class="precip-below-cell">B</td></tr>
+                                <tr><td>South Dakota</td><td class="temp-below-cell">B</td><td class="precip-below-cell">B</td></tr>
+                                <tr><td>Nebraska</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Kansas</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Oklahoma</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Texas (N)</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Texas (S)</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Texas (W)</td><td class="temp-normal-cell">N</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Minnesota</td><td class="temp-below-cell">B</td><td class="precip-below-cell">B</td></tr>
+                                <tr><td>Iowa</td><td class="temp-below-cell">B</td><td class="precip-below-cell">B</td></tr>
+                                <tr><td>Missouri</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Arkansas</td><td class="temp-below-cell">B</td><td class="precip-below-cell">B</td></tr>
+                                <tr><td>Louisiana</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Wisconsin</td><td class="temp-below-cell">B</td><td class="precip-below-cell">B</td></tr>
+                                <tr><td>Illinois</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Mississippi</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Michigan</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Indiana</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Ohio</td><td class="temp-below-cell">B</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>Kentucky</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Tennessee</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Alabama</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>New York</td><td class="temp-below-cell">B</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>Vermont</td><td class="temp-below-cell">B</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>New Hampshire</td><td class="temp-below-cell">B</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>Maine</td><td class="temp-below-cell">B</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>Massachusetts</td><td class="temp-below-cell">B</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>Connecticut</td><td class="temp-below-cell">B</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>Rhode Island</td><td class="temp-below-cell">B</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>Pennsylvania</td><td class="temp-below-cell">B</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>New Jersey</td><td class="temp-below-cell">B</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>West Virginia</td><td class="temp-below-cell">B</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>Maryland</td><td class="temp-below-cell">B</td><td class="precip-above-cell">A</td></tr>
+                                <tr class="delaware-row"><td><strong>DELAWARE</strong></td><td class="temp-below-cell"><strong>B</strong></td><td class="precip-above-cell"><strong>A</strong></td></tr>
+                                <tr><td>Virginia</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>North Carolina</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>South Carolina</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Georgia</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>FL Panhandle</td><td class="temp-below-cell">B</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>FL Peninsula</td><td class="temp-normal-cell">N</td><td class="precip-above-cell">A</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 style="color: #00ffff; text-align: center; margin: 20px 0;">8-14 Day Outlook</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>State</th>
+                                    <th>Temp</th>
+                                    <th>Precip</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Washington</td><td class="temp-above-cell">A</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Oregon</td><td class="temp-above-cell">A</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Northern Calif</td><td class="temp-above-cell">A</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>Southern Calif</td><td class="temp-above-cell">A</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>Idaho</td><td class="temp-above-cell">A</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Nevada</td><td class="temp-above-cell">A</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>Montana (W)</td><td class="temp-above-cell">A</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Montana (E)</td><td class="temp-normal-cell">N</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Wyoming</td><td class="temp-normal-cell">N</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Utah</td><td class="temp-above-cell">A</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>Arizona</td><td class="temp-above-cell">A</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>Colorado</td><td class="temp-normal-cell">N</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>New Mexico</td><td class="temp-normal-cell">N</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>North Dakota</td><td class="temp-below-cell">B</td><td class="precip-below-cell">B</td></tr>
+                                <tr><td>South Dakota</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Nebraska</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Kansas</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Oklahoma</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Texas (N)</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Texas (S)</td><td class="temp-normal-cell">N</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>Texas (W)</td><td class="temp-normal-cell">N</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Minnesota</td><td class="temp-below-cell">B</td><td class="precip-below-cell">B</td></tr>
+                                <tr><td>Iowa</td><td class="temp-below-cell">B</td><td class="precip-below-cell">B</td></tr>
+                                <tr><td>Missouri</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Arkansas</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Louisiana</td><td class="temp-below-cell">B</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>Wisconsin</td><td class="temp-below-cell">B</td><td class="precip-below-cell">B</td></tr>
+                                <tr><td>Illinois</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Mississippi</td><td class="temp-below-cell">B</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>Michigan</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Indiana</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Ohio</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Kentucky</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Tennessee</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Alabama</td><td class="temp-below-cell">B</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>New York</td><td class="temp-below-cell">B</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>Vermont</td><td class="temp-below-cell">B</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>New Hampshire</td><td class="temp-below-cell">B</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>Maine</td><td class="temp-normal-cell">N</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>Massachusetts</td><td class="temp-below-cell">B</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>Connecticut</td><td class="temp-below-cell">B</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>Rhode Island</td><td class="temp-below-cell">B</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>Pennsylvania</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>New Jersey</td><td class="temp-below-cell">B</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>West Virginia</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Maryland</td><td class="temp-below-cell">B</td><td class="precip-above-cell">A</td></tr>
+                                <tr class="delaware-row"><td><strong>DELAWARE</strong></td><td class="temp-below-cell"><strong>B</strong></td><td class="precip-above-cell"><strong>A</strong></td></tr>
+                                <tr><td>Virginia</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>North Carolina</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>South Carolina</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>Georgia</td><td class="temp-below-cell">B</td><td class="precip-normal-cell">N</td></tr>
+                                <tr><td>FL Panhandle</td><td class="temp-normal-cell">N</td><td class="precip-above-cell">A</td></tr>
+                                <tr><td>FL Peninsula</td><td class="temp-above-cell">A</td><td class="precip-above-cell">A</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div class="grid">
+            <div class="card analogs">
+                <div class="card-header">Historical Analogs</div>
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: #ffa500;">5-Day Pattern Analogs (D-3):</strong>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <span class="analog-date">04/12/2021</span>
+                    <span class="analog-date">05/11/2016</span>
+                    <span class="analog-date">04/07/2012</span>
+                    <span class="analog-date">04/25/1995</span>
+                    <span class="analog-date">05/02/2024</span>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: #ffa500;">7-Day Pattern Analogs (D-4):</strong>
+                </div>
+                <div>
+                    <span class="analog-date">04/06/2001</span>
+                    <span class="analog-date">04/13/2010</span>
+                    <span class="analog-date">05/03/2019</span>
+                    <span class="analog-date">04/07/2012</span>
+                    <span class="analog-date">05/10/2016</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Legend & Notes</div>
+                <div style="font-size: 0.85rem; line-height: 1.5;">
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: #00ffff;">Temperature Categories:</strong><br>
+                        <span style="color: #ff8888;">A - Above Normal</span> |
+                        <span style="color: #cccccc;">N - Near Normal</span> |
+                        <span style="color: #8888ff;">B - Below Normal</span>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: #00ffff;">Precipitation Categories:</strong><br>
+                        <span style="color: #88ff88;">A - Above Median</span> |
+                        <span style="color: #cccccc;">N - Near Median</span> |
+                        <span style="color: #ffcc88;">B - Below Median</span>
+                    </div>
+                    <div>
+                        <strong style="color: #ffa500;">Reference Period:</strong> 1991-2020 climatology<br>
+                        <strong style="color: #ffa500;">Next Update:</strong> Monthly/seasonal outlooks on May 21
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer style="text-align: center; margin-top: 40px; padding: 20px; border-top: 1px solid #333; color: #888; font-size: 0.9rem;">
+            <div>Delaware Weather Group Extended Forecast Dashboard</div>
+            <div>Data Source: NOAA Climate Prediction Center | Visualization: Weather Operations Control Room</div>
+            <div style="margin-top: 10px; font-size: 0.8rem;">
+                Dashboard updates automatically with each new CPC outlook release
+            </div>
+        </footer>
     </div>
-
-    <div class="main-container">
-        <!-- Confidence Gauges -->
-        <div class="panel">
-            <div class="panel-header">FORECAST CONFIDENCE</div>
-            <div class="confidence-gauge">
-                <div>
-                    <div style="color: #ffbf00; font-weight: 700; margin-bottom: 5px;">6-10 DAY</div>
-                    <div class="gauge gauge-6-10">
-                        <div class="gauge-inner">3/5</div>
-                    </div>
-                    <div style="text-align: center; margin-top: 5px; font-size: 0.8em;">AVERAGE</div>
-                </div>
-                <div>
-                    <div style="color: #ffbf00; font-weight: 700; margin-bottom: 5px;">8-14 DAY</div>
-                    <div class="gauge gauge-8-14">
-                        <div class="gauge-inner">2/5</div>
-                    </div>
-                    <div style="text-align: center; margin-top: 5px; font-size: 0.8em;">BELOW AVG</div>
-                </div>
-            </div>
-            <div style="margin-top: 15px; font-size: 0.9em; color: #ccc;">
-                6-10: Fair model agreement on blocking pattern<br>
-                8-14: High uncertainty in precip pattern
-            </div>
-        </div>
-
-        <!-- Pattern Overview -->
-        <div class="panel two-column">
-            <div class="panel-header">SYNOPTIC PATTERN OVERVIEW</div>
-            <div class="pattern-card">
-                <div class="pattern-title">6-10 DAY PATTERN</div>
-                <div class="pattern-desc">Strong anomalous blocking ridge near southern Greenland supports long-duration troughing over northeastern CONUS. Western US dominated by ridging from eastern Alaska southward to Pacific Northwest coast.</div>
-            </div>
-            <div class="pattern-card">
-                <div class="pattern-title">8-14 DAY EVOLUTION</div>
-                <div class="pattern-desc">Greenland ridge retrogrades toward northeastern Canada. Troughing remains entrenched over northeastern CONUS. Upstream ridging moves inland across western US.</div>
-            </div>
-        </div>
-
-        <!-- Key Highlights -->
-        <div class="panel full-width">
-            <div class="panel-header">KEY FORECAST HIGHLIGHTS</div>
-            <div class="highlights">
-                <strong>TEMPERATURE:</strong> Unseasonably cold pattern locks in across eastern CONUS due to persistent troughing. <strong>Delaware</strong> under high confidence (>70%) below normal temperatures for 6-10 days, continuing into week 2.<br><br>
-                <strong>PRECIPITATION:</strong> <strong>Delaware</strong> favored for above normal precipitation both periods due to enhanced moisture transport along trough periphery and coastal low development.<br><br>
-                <strong>PATTERN PERSISTENCE:</strong> Slow-moving blocking configuration supports extended duration of anomalous weather patterns across the forecast domain.
-            </div>
-        </div>
-
-        <!-- Temperature Outlook -->
-        <div class="panel">
-            <div class="panel-header">TEMPERATURE OUTLOOK</div>
-            <div class="forecast-bar">
-                <div class="bar-label">West Above</div>
-                <div class="bar-container">
-                    <div class="bar-fill temp-above" style="width: 85%;"></div>
-                </div>
-                <div>85%</div>
-            </div>
-            <div class="forecast-bar">
-                <div class="bar-label">East Below</div>
-                <div class="bar-container">
-                    <div class="bar-fill temp-below" style="width: 75%;"></div>
-                </div>
-                <div>75%</div>
-            </div>
-            <div class="forecast-bar">
-                <div class="bar-label">DE Below</div>
-                <div class="bar-container">
-                    <div class="bar-fill temp-below" style="width: 70%;"></div>
-                </div>
-                <div>70%</div>
-            </div>
-        </div>
-
-        <!-- Precipitation Outlook -->
-        <div class="panel">
-            <div class="panel-header">PRECIPITATION OUTLOOK</div>
-            <div class="forecast-bar">
-                <div class="bar-label">SE Above</div>
-                <div class="bar-container">
-                    <div class="bar-fill precip-above" style="width: 60%;"></div>
-                </div>
-                <div>60%</div>
-            </div>
-            <div class="forecast-bar">
-                <div class="bar-label">Upper MW Below</div>
-                <div class="bar-container">
-                    <div class="bar-fill precip-below" style="width: 55%;"></div>
-                </div>
-                <div>55%</div>
-            </div>
-            <div class="forecast-bar">
-                <div class="bar-label">DE Above</div>
-                <div class="bar-container">
-                    <div class="bar-fill precip-above" style="width: 65%;"></div>
-                </div>
-                <div>65%</div>
-            </div>
-        </div>
-
-        <!-- Model Blend -->
-        <div class="panel">
-            <div class="panel-header">500-HPA HEIGHT BLEND</div>
-            <div style="margin-bottom: 15px; color: #ffbf00; text-align: center; font-weight: 700;">6-10 DAY BLEND</div>
-            <div class="model-blend">
-                <div class="model-item">
-                    <span class="model-name">GFS 6Z ENS</span>
-                    <span class="model-percent">20%</span>
-                </div>
-                <div class="model-item">
-                    <span class="model-name">ECMWF 0Z ENS</span>
-                    <span class="model-percent">45%</span>
-                </div>
-                <div class="model-item">
-                    <span class="model-name">CMC 0Z ENS</span>
-                    <span class="model-percent">35%</span>
-                </div>
-            </div>
-            <div style="margin: 15px 0; color: #ffbf00; text-align: center; font-weight: 700;">8-14 DAY BLEND</div>
-            <div class="model-blend">
-                <div class="model-item">
-                    <span class="model-name">GFS 6Z ENS</span>
-                    <span class="model-percent">20%</span>
-                </div>
-                <div class="model-item">
-                    <span class="model-name">ECMWF 0Z ENS</span>
-                    <span class="model-percent">45%</span>
-                </div>
-                <div class="model-item">
-                    <span class="model-name">CMC 0Z ENS</span>
-                    <span class="model-percent">35%</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- State Tables -->
-        <div class="panel full-width">
-            <div class="panel-header">STATE-BY-STATE OUTLOOK (6-10 DAY | 8-14 DAY)</div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <div>
-                    <div style="color: #ffbf00; font-weight: 700; margin-bottom: 10px;">EASTERN STATES</div>
-                    <div class="state-table">
-                        <div class="state-row" style="background: #333; font-weight: 700;">
-                            <div>STATE</div>
-                            <div style="text-align: center;">TEMP</div>
-                            <div style="text-align: center;">PRECIP</div>
-                        </div>
-                        <div class="state-row">
-                            <div class="state-name">NEW YORK</div>
-                            <div><span class="forecast-value value-b">B</span> | <span class="forecast-value value-b">B</span></div>
-                            <div><span class="forecast-value value-a-precip">A</span> | <span class="forecast-value value-a-precip">A</span></div>
-                        </div>
-                        <div class="state-row">
-                            <div class="state-name">PENNSYLVANIA</div>
-                            <div><span class="forecast-value value-b">B</span> | <span class="forecast-value value-b">B</span></div>
-                            <div><span class="forecast-value value-n">N</span> | <span class="forecast-value value-a-precip">A</span></div>
-                        </div>
-                        <div class="state-row">
-                            <div class="state-name">NEW JERSEY</div>
-                            <div><span class="forecast-value value-b">B</span> | <span class="forecast-value value-b">B</span></div>
-                            <div><span class="forecast-value value-a-precip">A</span> | <span class="forecast-value value-a-precip">A</span></div>
-                        </div>
-                        <div class="state-row delaware-highlight">
-                            <div class="state-name">DELAWARE</div>
-                            <div><span class="forecast-value value-b">B</span> | <span class="forecast-value value-b">B</span></div>
-                            <div><span class="forecast-value value-a-precip">A</span> | <span class="forecast-value value-a-precip">A</span></div>
-                        </div>
-                        <div class="state-row">
-                            <div class="state-name">MARYLAND</div>
-                            <div><span class="forecast-value value-b">B</span> | <span class="forecast-value value-b">B</span></div>
-                            <div><span class="forecast-value value-a-precip">A</span> | <span class="forecast-value value-a-precip">A</span></div>
-                        </div>
-                        <div class="state-row">
-                            <div class="state-name">VIRGINIA</div>
-                            <div><span class="forecast-value value-b">B</span> | <span class="forecast-value value-b">B</span></div>
-                            <div><span class="forecast-value value-a-precip">A</span> | <span class="forecast-value value-n">N</span></div>
-                        </div>
-                        <div class="state-row">
-                            <div class="state-name">N CAROLINA</div>
-                            <div><span class="forecast-value value-b">B</span> | <span class="forecast-value value-b">B</span></div>
-                            <div><span class="forecast-value value-a-precip">A</span> | <span class="forecast-value value-a-precip">A</span></div>
-                        </div>
-                        <div class="state-row">
-                            <div class="state-name">S CAROLINA</div>
-                            <div><span class="forecast-value value-b">B</span> | <span class="forecast-value value-b">B</span></div>
-                            <div><span class="forecast-value value-a-precip">A</span> | <span class="forecast-value value-a-precip">A</span></div>
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <div style="color: #ffbf00; font-weight: 700; margin-bottom: 10px;">WESTERN STATES</div>
-                    <div class="state-table">
-                        <div class="state-row" style="background: #333; font-weight: 700;">
-                            <div>STATE</div>
-                            <div style="text-align: center;">TEMP</div>
-                            <div style="text-align: center;">PRECIP</div>
-                        </div>
-                        <div class="state-row">
-                            <div class="state-name">WASHINGTON</div>
-                            <div><span class="forecast-value value-a">A</span> | <span class="forecast-value value-a">A</span></div>
-                            <div><span class="forecast-value value-b-precip">B</span> | <span class="forecast-value value-b-precip">B</span></div>
-                        </div>
-                        <div class="state-row">
-                            <div class="state-name">OREGON</div>
-                            <div><span class="forecast-value value-a">A</span> | <span class="forecast-value value-a">A</span></div>
-                            <div><span class="forecast-value value-b-precip">B</span> | <span class="forecast-value value-b-precip">B</span></div>
-                        </div>
-                        <div class="state-row">
-                            <div class="state-name">N CALIFORNIA</div>
-                            <div><span class="forecast-value value-a">A</span> | <span class="forecast-value value-a">A</span></div>
-                            <div><span class="forecast-value value-n">N</span> | <span class="forecast-value value-n">N</span></div>
-                        </div>
-                        <div class="state-row">
-                            <div class="state-name">S CALIFORNIA</div>
-                            <div><span class="forecast-value value-a">A</span> | <span class="forecast-value value-a">A</span></div>
-                            <div><span class="forecast-value value-n">N</span> | <span class="forecast-value value-a-precip">A</span></div>
-                        </div>
-                        <div class="state-row">
-                            <div class="state-name">NEVADA</div>
-                            <div><span class="forecast-value value-a">A</span> | <span class="forecast-value value-a">A</span></div>
-                            <div><span class="forecast-value value-n">N</span> | <span class="forecast-value value-a-precip">A</span></div>
-                        </div>
-                        <div class="state-row">
-                            <div class="state-name">UTAH</div>
-                            <div><span class="forecast-value value-a">A</span> | <span class="forecast-value value-a">A</span></div>
-                            <div><span class="forecast-value value-n">N</span> | <span class="forecast-value value-a-precip">A</span></div>
-                        </div>
-                        <div class="state-row">
-                            <div class="state-name">ARIZONA</div>
-                            <div><span class="forecast-value value-a">A</span> | <span class="forecast-value value-a">A</span></div>
-                            <div><span class="forecast-value value-n">N</span> | <span class="forecast-value value-a-precip">A</span></div>
-                        </div>
-                        <div class="state-row">
-                            <div class="state-name">COLORADO</div>
-                            <div><span class="forecast-value value-n">N</span> | <span class="forecast-value value-a">A</span></div>
-                            <div><span class="forecast-value value-a-precip">A</span> | <span class="forecast-value value-a-precip">A</span></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Historical Analogs -->
-        <div class="panel">
-            <div class="panel-header">HISTORICAL ANALOGS</div>
-            <div style="margin-bottom: 15px;">
-                <div style="color: #ffbf00; font-weight: 700; margin-bottom: 8px;">5-DAY PATTERN (D-3)</div>
-                <div class="analogs">
-                    <div class="analog-date">04/30/02</div>
-                    <div class="analog-date">05/03/98</div>
-                    <div class="analog-date">04/25/09</div>
-                    <div class="analog-date">04/23/89</div>
-                    <div class="analog-date">04/05/01</div>
-                </div>
-            </div>
-            <div>
-                <div style="color: #ffbf00; font-weight: 700; margin-bottom: 8px;">7-DAY PATTERN (D-4)</div>
-                <div class="analogs">
-                    <div class="analog-date">05/03/98</div>
-                    <div class="analog-date">04/30/02</div>
-                    <div class="analog-date">04/24/09</div>
-                    <div class="analog-date">04/14/04</div>
-                    <div class="analog-date">05/08/04</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Add some dynamic effects
-        document.addEventListener('DOMContentLoaded', function() {
-            // Animate confidence gauges
-            const gauges = document.querySelectorAll('.gauge');
-            gauges.forEach(gauge => {
-                gauge.style.transform = 'scale(0.9)';
-                setTimeout(() => {
-                    gauge.style.transition = 'transform 0.5s ease';
-                    gauge.style.transform = 'scale(1)';
-                }, 100);
-            });
-
-            // Animate bars
-            const bars = document.querySelectorAll('.bar-fill');
-            bars.forEach((bar, index) => {
-                const width = bar.style.width;
-                bar.style.width = '0%';
-                setTimeout(() => {
-                    bar.style.width = width;
-                }, index * 100);
-            });
-
-            // Add pulsing effect to Delaware highlight
-            const delawareRow = document.querySelector('.delaware-highlight');
-            setInterval(() => {
-                delawareRow.style.boxShadow = '0 0 20px rgba(0, 255, 255, 0.8)';
-                setTimeout(() => {
-                    delawareRow.style.boxShadow = '0 0 10px rgba(0, 255, 255, 0.4)';
-                }, 1000);
-            }, 2000);
-        });
-    </script>
 </body>
 </html>
